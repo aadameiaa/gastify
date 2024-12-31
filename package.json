@@ -1,0 +1,17 @@
+{
+	"name": "gastify",
+	"version": "1.0.0",
+	"description": "Gastify is a streamlined CLI application designed to automate the reporting and purchasing processes for LPG gas.",
+	"main": "index.js",
+	"scripts": {
+		"dev": "ts-node src/index.ts"
+	},
+	"author": "Damei",
+	"license": "ISC",
+	"devDependencies": {
+		"@playwright/test": "^1.49.1",
+		"@types/node": "^22.10.2",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.7.2"
+	}
+}

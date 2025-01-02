@@ -1,8 +1,12 @@
-import pw from 'playwright'
+import pw, { Browser, BrowserContext, Page } from 'playwright'
 
 import { DEFAULT_TIMEOUT } from './constants'
 
-export async function launchBrowser() {
+export async function launchBrowser(): Promise<{
+	browser: Browser
+	context: BrowserContext
+	page: Page
+}> {
 	const browser = await pw.chromium.launch({ headless: false })
 	const context = await browser.newContext()
 	const page = await browser.newPage()

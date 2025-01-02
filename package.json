@@ -15,6 +15,7 @@
 		"typescript": "^5.7.2"
 	},
 	"dependencies": {
+		"dotenv": "^16.4.7",
 		"http-status-codes": "^2.3.0"
 	}
 }

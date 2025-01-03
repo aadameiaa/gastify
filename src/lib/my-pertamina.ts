@@ -4,6 +4,7 @@ import { Page } from 'playwright'
 import { Customer } from '../models/customer'
 import { Product } from '../models/product'
 import { Profile } from '../models/profile'
+import { Report } from '../models/report'
 import {
 	LOGIN_URL,
 	MY_PERTAMINA_DELAY,
@@ -11,6 +12,8 @@ import {
 	PRODUCT_URL,
 	PROFILE_ENDPOINT,
 	PROFILE_URL,
+	REPORT_ENDPOINT,
+	REPORT_URL,
 	VERIFY_NATIONALITY_ID_ENDPOINT,
 	VERIFY_NATIONALITY_ID_URL,
 } from './constants'
@@ -18,6 +21,7 @@ import {
 	parseResponseToCustomerData,
 	parseResponseToProductData,
 	parseResponseToProfileData,
+	parseResponseToReportData,
 } from './dto'
 import { readJSONFile, writeJSONFile } from './file'
 import {
@@ -53,6 +57,14 @@ async function fetchProfile(page: Page): Promise<Profile> {
 	return profile
 }
 
+async function waitForProfileResponse(page: Page) {
+	return page.waitForResponse(
+		(response) =>
+			response.request().method() === 'GET' &&
+			response.url() === PROFILE_ENDPOINT
+	)
+}
+
 export async function getProduct(
 	page: Page,
 	{ phoneNumber, pin }: { phoneNumber: string; pin: string }
@@ -77,6 +89,56 @@ async function fetchProduct(page: Page): Promise<Product> {
 	const product = new Product(productData)
 
 	return product
+}
+
+async function waitForProductResponse(page: Page) {
+	return page.waitForResponse(
+		(response) =>
+			response.request().method() === 'GET' &&
+			response.url() === PRODUCT_ENDPOINT
+	)
+}
+
+export async function getSalesReport(
+	page: Page,
+	{ phoneNumber, pin }: { phoneNumber: string; pin: string },
+	{ startedDate, endedDate }: { startedDate: string; endedDate: string }
+) {
+	await gotoLoginPage(page)
+	await fillLoginForm(page, { phoneNumber, pin })
+	await submitLoginForm(page)
+	await closeAnnouncementModal(page)
+	await gotoReportPage(page, { startedDate, endedDate })
+
+	const report = await fetchReport(page, { startedDate, endedDate })
+
+	writeJSONFile(report.data(), `report-${startedDate}_to_${endedDate}.json`)
+
+	await gotoNationalityVerificationPage(page)
+	await logout(page)
+}
+
+async function fetchReport(
+	page: Page,
+	{ startedDate, endedDate }: { startedDate: string; endedDate: string }
+): Promise<Report> {
+	const response = await waitForReportResponse(page, { startedDate, endedDate })
+	const reportData = await parseResponseToReportData(response)
+	const report = new Report(reportData)
+
+	return report
+}
+
+async function waitForReportResponse(
+	page: Page,
+	{ startedDate, endedDate }: { startedDate: string; endedDate: string }
+) {
+	return page.waitForResponse(
+		(response) =>
+			response.request().method() === 'GET' &&
+			response.url() ===
+				`${REPORT_ENDPOINT}?startDate=${startedDate}&endDate=${endedDate}`
+	)
 }
 
 export async function verifyNationalityIds(
@@ -119,6 +181,13 @@ async function gotoProductPage(page: Page) {
 	await page.goto(PRODUCT_URL)
 }
 
+async function gotoReportPage(
+	page: Page,
+	{ startedDate, endedDate }: { startedDate: string; endedDate: string }
+) {
+	await page.goto(`${REPORT_URL}?startDate=${startedDate}&endDate=${endedDate}`)
+}
+
 async function gotoNationalityVerificationPage(page: Page) {
 	await page.goto(VERIFY_NATIONALITY_ID_URL)
 }
@@ -133,22 +202,6 @@ async function fillLoginForm(
 
 async function submitLoginForm(page: Page) {
 	await page.getByText('Masuk').click()
-}
-
-async function waitForProfileResponse(page: Page) {
-	return page.waitForResponse(
-		(response) =>
-			response.request().method() === 'GET' &&
-			response.url() === PROFILE_ENDPOINT
-	)
-}
-
-async function waitForProductResponse(page: Page) {
-	return page.waitForResponse(
-		(response) =>
-			response.request().method() === 'GET' &&
-			response.url() === PRODUCT_ENDPOINT
-	)
 }
 
 async function processNationalityIds(

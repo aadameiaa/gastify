@@ -47,6 +47,30 @@ export type ProductStock = {
 	date: string
 }
 
+export type ReportData = {
+	summaries: ReportSummary[]
+	transactions: Transaction[]
+}
+
+export type ReportSummary = {
+	sold: number
+	modal: number
+	profit: number
+	income: number
+}
+
+export type Transaction = {
+	id: string
+	customer: {
+		nationalityId: string
+		name: string
+		types: CustomerType[]
+	}
+	product: {
+		quantity: number
+	}
+}
+
 export type CustomerData = {
 	nationalityId: string
 	name: string

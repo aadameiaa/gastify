@@ -1,5 +1,6 @@
 export type ProfileResponse = MyPertaminaResponse<ProfileData>
 export type ProductResponse = MyPertaminaResponse<ProductData>
+export type ReportResponse = MyPertaminaResponse<ReportData>
 export type VerifyNationalityIdResponse =
 	MyPertaminaResponse<VerifyNationalityIdData>
 
@@ -50,7 +51,7 @@ type Bank = {
 	accountNumber: any
 }
 
-export interface ProductData {
+type ProductData = {
 	registrationId: string
 	storeName: string
 	productId: string
@@ -67,6 +68,26 @@ export interface ProductData {
 	lastStock: number
 	lastStockDate: string
 	lastSyncAt: string
+}
+
+type ReportData = {
+	summaryReport: SummaryReport[]
+	customersReport: CustomersReport[]
+}
+
+type SummaryReport = {
+	sold: number
+	modal: number
+	profit: number
+	incomeMyptm: number
+}
+
+type CustomersReport = {
+	customerReportId: string
+	nationalityId: string
+	name: string
+	categories: string[]
+	total: number
 }
 
 type VerifyNationalityIdData = {

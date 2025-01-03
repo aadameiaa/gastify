@@ -3,9 +3,16 @@ import { Response } from 'playwright'
 import {
 	ProductResponse,
 	ProfileResponse,
+	ReportResponse,
 	VerifyNationalityIdResponse,
 } from './responses'
-import { CustomerData, CustomerType, ProductData, ProfileData } from './types'
+import {
+	CustomerData,
+	CustomerType,
+	ProductData,
+	ProfileData,
+	ReportData,
+} from './types'
 
 export async function parseResponseToProfileData(
 	response: Response
@@ -55,6 +62,32 @@ export async function parseResponseToProductData(
 			sold: data.sold,
 			date: data.stockDate,
 		},
+	}
+}
+
+export async function parseResponseToReportData(
+	response: Response
+): Promise<ReportData> {
+	const { data } = (await response.json()) as ReportResponse
+
+	return {
+		summaries: data.summaryReport.map((report) => ({
+			sold: report.sold,
+			modal: report.modal,
+			profit: report.profit,
+			income: report.incomeMyptm,
+		})),
+		transactions: data.customersReport.map((report) => ({
+			id: report.customerReportId,
+			customer: {
+				nationalityId: report.nationalityId,
+				name: report.name,
+				types: report.categories as CustomerType[],
+			},
+			product: {
+				quantity: report.total,
+			},
+		})),
 	}
 }
 

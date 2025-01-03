@@ -6,14 +6,14 @@ import {
 } from '../lib/types'
 
 export class Profile {
-	private registrationId: string
-	private nationalityId: string
-	private name: string
-	private phoneNumber: string
-	private email: string
-	private location: ProfileLocation
-	private agent: ProfileAgent
-	private flags: ProfileFlags
+	private readonly registrationId: string
+	private readonly nationalityId: string
+	private readonly name: string
+	private readonly phoneNumber: string
+	private readonly email: string
+	private readonly location: ProfileLocation
+	private readonly agent: ProfileAgent
+	private readonly flags: ProfileFlags
 
 	constructor({
 		registrationId,
@@ -35,7 +35,7 @@ export class Profile {
 		this.flags = flags
 	}
 
-	data(): ProfileData {
+	toJSON(): Readonly<ProfileData> {
 		return {
 			registrationId: this.registrationId,
 			nationalityId: this.nationalityId,

@@ -1,11 +1,11 @@
 import { ProductData, ProductStock } from '../lib/types'
 
 export class Product {
-	private id: string
-	private name: string
-	private modal: number
-	private price: number
-	private stock: ProductStock
+	private readonly id: string
+	private readonly name: string
+	private readonly modal: number
+	private readonly price: number
+	private readonly stock: ProductStock
 
 	constructor({ id, name, modal, price, stock }: ProductData) {
 		this.id = id
@@ -15,7 +15,7 @@ export class Product {
 		this.stock = stock
 	}
 
-	data(): ProductData {
+	toJSON(): Readonly<ProductData> {
 		return {
 			id: this.id,
 			name: this.name,

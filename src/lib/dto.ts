@@ -69,23 +69,24 @@ export async function parseResponseToReportData(
 	response: Response
 ): Promise<ReportData> {
 	const { data } = (await response.json()) as ReportResponse
+	const summaryReport = data.summaryReport[0]
 
 	return {
-		summaries: data.summaryReport.map((report) => ({
-			sold: report.sold,
-			modal: report.modal,
-			profit: report.profit,
-			income: report.incomeMyptm,
-		})),
-		transactions: data.customersReport.map((report) => ({
-			id: report.customerReportId,
+		summary: {
+			sold: summaryReport.sold,
+			modal: summaryReport.modal,
+			profit: summaryReport.profit,
+			income: summaryReport.incomeMyptm,
+		},
+		transactions: data.customersReport.map((customerReport) => ({
+			id: customerReport.customerReportId,
 			customer: {
-				nationalityId: report.nationalityId,
-				name: report.name,
-				types: report.categories as CustomerType[],
+				nationalityId: customerReport.nationalityId,
+				name: customerReport.name,
+				types: customerReport.categories as CustomerType[],
 			},
 			product: {
-				quantity: report.total,
+				quantity: customerReport.total,
 			},
 		})),
 	}

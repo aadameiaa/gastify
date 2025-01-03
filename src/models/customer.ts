@@ -1,11 +1,11 @@
 import { CustomerData, CustomerFlags, CustomerType } from '../lib/types'
 
 export class Customer {
-	private nationalityId: string
-	private name: string
-	private quota: number
-	private types: CustomerType[]
-	private flags: CustomerFlags
+	private readonly nationalityId: string
+	private readonly name: string
+	private readonly quota: number
+	private readonly types: CustomerType[]
+	private readonly flags: CustomerFlags
 
 	constructor({ nationalityId, name, quota, types, flags }: CustomerData) {
 		this.nationalityId = nationalityId
@@ -16,9 +16,11 @@ export class Customer {
 	}
 
 	hasOutdatedRecommendationLetter(): boolean {
-		return (
-			this.types.includes('Usaha Mikro') && !this.flags.isRecommendationLetter
-		)
+		return this.isMicroBusiness() && !this.flags.isRecommendationLetter
+	}
+
+	private isMicroBusiness(): boolean {
+		return this.types.includes('Usaha Mikro')
 	}
 
 	isMultipleTypes(): boolean {
@@ -29,7 +31,7 @@ export class Customer {
 		return this.quota >= 1
 	}
 
-	data(): CustomerData {
+	toJSON(): Readonly<CustomerData> {
 		return {
 			nationalityId: this.nationalityId,
 			name: this.name,

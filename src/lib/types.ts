@@ -48,7 +48,7 @@ export type ProductStock = {
 }
 
 export type ReportData = {
-	summaries: ReportSummary[]
+	summary: ReportSummary
 	transactions: Transaction[]
 }
 
@@ -88,4 +88,14 @@ export type CustomerFlags = {
 	isRecommendationLetter: boolean
 	isBlocked: boolean
 	isBusinessType: boolean
+}
+
+export type Credentials = {
+	phoneNumber: string
+	pin: string
+}
+
+export type Dates = {
+	started: string
+	ended: string
 }

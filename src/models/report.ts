@@ -1,17 +1,17 @@
 import { ReportData, ReportSummary, Transaction } from '../lib/types'
 
 export class Report {
-	private summaries: ReportSummary[]
-	private transactions: Transaction[]
+	private readonly summary: ReportSummary
+	private readonly transactions: Transaction[]
 
-	constructor({ summaries, transactions }: ReportData) {
-		this.summaries = summaries
+	constructor({ summary, transactions }: ReportData) {
+		this.summary = summary
 		this.transactions = transactions
 	}
 
-	data(): ReportData {
+	toJSON(): Readonly<ReportData> {
 		return {
-			summaries: this.summaries,
+			summary: this.summary,
 			transactions: this.transactions,
 		}
 	}

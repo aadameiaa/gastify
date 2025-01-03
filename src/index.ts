@@ -1,21 +1,16 @@
 import { config } from 'dotenv'
 
-import { verifyNationalityIds } from './lib/my-pertamina'
 import { launchBrowser } from './lib/playwright'
+import { Credentials } from './lib/types'
 
 config()
 
 const main = async () => {
 	const phoneNumber = process.env.PHONE_NUMBER as string
 	const pin = process.env.PIN as string
+	const credentials: Credentials = { phoneNumber, pin }
 
 	const { browser, context, page } = await launchBrowser()
-
-	await verifyNationalityIds(page, {
-		phoneNumber,
-		pin,
-		nationalityIdsPath: '../data/nationality-ids.json',
-	})
 
 	await context.close()
 	await browser.close()

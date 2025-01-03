@@ -14,5 +14,5 @@ export function getEligibleCustomers(customers: Customer[]): Customer[] {
 export function convertCustomersToCustomerDataList(
 	customers: Customer[]
 ): CustomerData[] {
-	return customers.map((customer) => customer.data())
+	return customers.map((customer) => customer.toJSON())
 }

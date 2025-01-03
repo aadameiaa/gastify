@@ -29,24 +29,17 @@ import {
 	getEligibleCustomers,
 	getUniqueNationalityIds,
 } from './helpers'
+import { Credentials, Dates } from './types'
 import { delay } from './utils'
 
-export async function getProfile(
-	page: Page,
-	{ phoneNumber, pin }: { phoneNumber: string; pin: string }
-) {
-	await gotoLoginPage(page)
-	await fillLoginForm(page, { phoneNumber, pin })
-	await submitLoginForm(page)
-	await closeAnnouncementModal(page)
-	await gotoProfilePage(page)
+export async function getProfile(page: Page, credentials: Credentials) {
+	await performAuthenticatedAction(page, credentials, async () => {
+		await gotoProfilePage(page)
 
-	const profile = await fetchProfile(page)
+		const profile = await fetchProfile(page)
 
-	writeJSONFile(profile.data(), 'profile.json')
-
-	await gotoNationalityVerificationPage(page)
-	await logout(page)
+		writeJSONFile(profile.toJSON(), 'profile.json')
+	})
 }
 
 async function fetchProfile(page: Page): Promise<Profile> {
@@ -65,22 +58,14 @@ async function waitForProfileResponse(page: Page) {
 	)
 }
 
-export async function getProduct(
-	page: Page,
-	{ phoneNumber, pin }: { phoneNumber: string; pin: string }
-) {
-	await gotoLoginPage(page)
-	await fillLoginForm(page, { phoneNumber, pin })
-	await submitLoginForm(page)
-	await closeAnnouncementModal(page)
-	await gotoProductPage(page)
+export async function getProduct(page: Page, credentials: Credentials) {
+	await performAuthenticatedAction(page, credentials, async () => {
+		await gotoProductPage(page)
 
-	const product = await fetchProduct(page)
+		const product = await fetchProduct(page)
 
-	writeJSONFile(product.data(), 'product.json')
-
-	await gotoNationalityVerificationPage(page)
-	await logout(page)
+		writeJSONFile(product.toJSON(), 'product.json')
+	})
 }
 
 async function fetchProduct(page: Page): Promise<Product> {
@@ -99,109 +84,64 @@ async function waitForProductResponse(page: Page) {
 	)
 }
 
-export async function getSalesReport(
+export async function getReport(
 	page: Page,
-	{ phoneNumber, pin }: { phoneNumber: string; pin: string },
-	{ startedDate, endedDate }: { startedDate: string; endedDate: string }
+	credentials: Credentials,
+	dates: Dates
 ) {
-	await gotoLoginPage(page)
-	await fillLoginForm(page, { phoneNumber, pin })
-	await submitLoginForm(page)
-	await closeAnnouncementModal(page)
-	await gotoReportPage(page, { startedDate, endedDate })
+	await performAuthenticatedAction(page, credentials, async () => {
+		await gotoReportPage(page, dates)
 
-	const report = await fetchReport(page, { startedDate, endedDate })
+		const report = await fetchReport(page, dates)
 
-	writeJSONFile(report.data(), `report-${startedDate}_to_${endedDate}.json`)
-
-	await gotoNationalityVerificationPage(page)
-	await logout(page)
+		writeJSONFile(
+			report.toJSON(),
+			`report-${dates.started}_to_${dates.ended}.json`
+		)
+	})
 }
 
-async function fetchReport(
-	page: Page,
-	{ startedDate, endedDate }: { startedDate: string; endedDate: string }
-): Promise<Report> {
-	const response = await waitForReportResponse(page, { startedDate, endedDate })
+async function fetchReport(page: Page, dates: Dates): Promise<Report> {
+	const response = await waitForReportResponse(page, dates)
 	const reportData = await parseResponseToReportData(response)
 	const report = new Report(reportData)
 
 	return report
 }
 
-async function waitForReportResponse(
-	page: Page,
-	{ startedDate, endedDate }: { startedDate: string; endedDate: string }
-) {
+async function waitForReportResponse(page: Page, dates: Dates) {
 	return page.waitForResponse(
 		(response) =>
 			response.request().method() === 'GET' &&
 			response.url() ===
-				`${REPORT_ENDPOINT}?startDate=${startedDate}&endDate=${endedDate}`
+				`${REPORT_ENDPOINT}?startDate=${dates.started}&endDate=${dates.ended}`
 	)
 }
 
 export async function verifyNationalityIds(
 	page: Page,
-	{
-		phoneNumber,
-		pin,
-		nationalityIdsPath,
-	}: { phoneNumber: string; pin: string; nationalityIdsPath: string }
+	credentials: Credentials,
+	nationalityIdsPath: string
 ) {
-	await gotoLoginPage(page)
-	await fillLoginForm(page, { phoneNumber, pin })
-	await submitLoginForm(page)
-	await closeAnnouncementModal(page)
+	await performAuthenticatedAction(page, credentials, async () => {
+		const nationalityIds = readJSONFile(nationalityIdsPath) as string[]
+		const uniqueNationalityIds = getUniqueNationalityIds(nationalityIds)
 
-	const nationalityIds = readJSONFile(nationalityIdsPath) as string[]
-	const uniqueNationalityIds = getUniqueNationalityIds(nationalityIds)
+		const customers = await processNationalityIds(
+			page,
+			uniqueNationalityIds.slice(0, 20)
+		)
+		writeJSONFile(
+			convertCustomersToCustomerDataList(customers),
+			'customers.json'
+		)
 
-	const customers = await processNationalityIds(page, uniqueNationalityIds)
-	const eligibleCustomers = getEligibleCustomers(customers)
-
-	writeJSONFile(convertCustomersToCustomerDataList(customers), 'customers.json')
-	writeJSONFile(
-		convertCustomersToCustomerDataList(eligibleCustomers),
-		'eligible-customers.json'
-	)
-
-	await logout(page)
-}
-
-async function gotoLoginPage(page: Page) {
-	await page.goto(LOGIN_URL, { waitUntil: 'networkidle' })
-}
-
-async function gotoProfilePage(page: Page) {
-	await page.goto(PROFILE_URL)
-}
-
-async function gotoProductPage(page: Page) {
-	await page.goto(PRODUCT_URL)
-}
-
-async function gotoReportPage(
-	page: Page,
-	{ startedDate, endedDate }: { startedDate: string; endedDate: string }
-) {
-	await page.goto(`${REPORT_URL}?startDate=${startedDate}&endDate=${endedDate}`)
-}
-
-async function gotoNationalityVerificationPage(page: Page) {
-	await page.goto(VERIFY_NATIONALITY_ID_URL)
-}
-
-async function fillLoginForm(
-	page: Page,
-	{ phoneNumber, pin }: { phoneNumber: string; pin: string }
-) {
-	await page.getByPlaceholder('Email atau No. Handphone').fill(phoneNumber)
-	await page.getByPlaceholder('PIN (6-digit)').fill(pin)
-}
-
-async function submitLoginForm(page: Page) {
-	await page.getByText('Masuk').click()
+		const eligibleCustomers = getEligibleCustomers(customers)
+		writeJSONFile(
+			convertCustomersToCustomerDataList(eligibleCustomers),
+			'eligible-customers.json'
+		)
+	})
 }
 
 async function processNationalityIds(
@@ -305,8 +245,52 @@ async function handleCustomerTypeModals(
 		return await closeChooseCustomerTypeModal(page)
 	}
 
-	// return await page.getByTestId('btnChangeBuyer').click()
 	return await gotoNationalityVerificationPage(page)
+}
+
+async function performAuthenticatedAction(
+	page: Page,
+	credentials: Credentials,
+	action: () => Promise<void>
+) {
+	await gotoLoginPage(page)
+	await fillLoginForm(page, credentials)
+	await submitLoginForm(page)
+	await closeAnnouncementModal(page)
+	await action()
+	await gotoNationalityVerificationPage(page)
+	await logout(page)
+}
+
+async function gotoLoginPage(page: Page) {
+	await page.goto(LOGIN_URL, { waitUntil: 'networkidle' })
+}
+
+async function gotoProfilePage(page: Page) {
+	await page.goto(PROFILE_URL)
+}
+
+async function gotoProductPage(page: Page) {
+	await page.goto(PRODUCT_URL)
+}
+
+async function gotoReportPage(page: Page, dates: Dates) {
+	await page.goto(
+		`${REPORT_URL}?startDate=${dates.started}&endDate=${dates.ended}`
+	)
+}
+
+async function gotoNationalityVerificationPage(page: Page) {
+	await page.goto(VERIFY_NATIONALITY_ID_URL)
+}
+
+async function fillLoginForm(page: Page, { phoneNumber, pin }: Credentials) {
+	await page.getByPlaceholder('Email atau No. Handphone').fill(phoneNumber)
+	await page.getByPlaceholder('PIN (6-digit)').fill(pin)
+}
+
+async function submitLoginForm(page: Page) {
+	await page.getByText('Masuk').click()
 }
 
 async function closeAnnouncementModal(page: Page) {

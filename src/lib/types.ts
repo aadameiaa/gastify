@@ -32,6 +32,21 @@ export type ProfileFlags = {
 	isAvailableTransaction: boolean
 }
 
+export type ProductData = {
+	id: string
+	name: string
+	modal: number
+	price: number
+	stock: ProductStock
+}
+
+export type ProductStock = {
+	available: number
+	redeem: number
+	sold: number
+	date: string
+}
+
 export type CustomerData = {
 	nationalityId: string
 	name: string

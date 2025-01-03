@@ -1,7 +1,11 @@
 import { Response } from 'playwright'
 
-import { ProfileResponse, VerifyNationalityIdResponse } from './responses'
-import { CustomerData, CustomerType, ProfileData } from './types'
+import {
+	ProductResponse,
+	ProfileResponse,
+	VerifyNationalityIdResponse,
+} from './responses'
+import { CustomerData, CustomerType, ProductData, ProfileData } from './types'
 
 export async function parseResponseToProfileData(
 	response: Response
@@ -31,6 +35,25 @@ export async function parseResponseToProfileData(
 			isSubsidyProduct: data.isSubsidiProduct,
 			isActiveMyPertamina: data.isActiveMyptm,
 			isAvailableTransaction: data.isAvailableTransaction,
+		},
+	}
+}
+
+export async function parseResponseToProductData(
+	response: Response
+): Promise<ProductData> {
+	const { data } = (await response.json()) as ProductResponse
+
+	return {
+		id: data.productId,
+		name: data.productName,
+		modal: data.modal,
+		price: data.price,
+		stock: {
+			available: data.stockAvailable,
+			redeem: data.stockRedeem,
+			sold: data.sold,
+			date: data.stockDate,
 		},
 	}
 }

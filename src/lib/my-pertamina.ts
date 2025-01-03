@@ -2,16 +2,23 @@ import { StatusCodes } from 'http-status-codes'
 import { Page } from 'playwright'
 
 import { Customer } from '../models/customer'
+import { Product } from '../models/product'
 import { Profile } from '../models/profile'
 import {
 	LOGIN_URL,
 	MY_PERTAMINA_DELAY,
+	PRODUCT_ENDPOINT,
+	PRODUCT_URL,
 	PROFILE_ENDPOINT,
 	PROFILE_URL,
 	VERIFY_NATIONALITY_ID_ENDPOINT,
 	VERIFY_NATIONALITY_ID_URL,
 } from './constants'
-import { parseResponseToCustomerData, parseResponseToProfileData } from './dto'
+import {
+	parseResponseToCustomerData,
+	parseResponseToProductData,
+	parseResponseToProfileData,
+} from './dto'
 import { readJSONFile, writeJSONFile } from './file'
 import {
 	convertCustomersToCustomerDataList,
@@ -36,6 +43,40 @@ export async function getProfile(
 
 	await gotoNationalityVerificationPage(page)
 	await logout(page)
+}
+
+async function fetchProfile(page: Page): Promise<Profile> {
+	const response = await waitForProfileResponse(page)
+	const profileData = await parseResponseToProfileData(response)
+	const profile = new Profile(profileData)
+
+	return profile
+}
+
+export async function getProduct(
+	page: Page,
+	{ phoneNumber, pin }: { phoneNumber: string; pin: string }
+) {
+	await gotoLoginPage(page)
+	await fillLoginForm(page, { phoneNumber, pin })
+	await submitLoginForm(page)
+	await closeAnnouncementModal(page)
+	await gotoProductPage(page)
+
+	const product = await fetchProduct(page)
+
+	writeJSONFile(product.data(), 'product.json')
+
+	await gotoNationalityVerificationPage(page)
+	await logout(page)
+}
+
+async function fetchProduct(page: Page): Promise<Product> {
+	const response = await waitForProductResponse(page)
+	const productData = await parseResponseToProductData(response)
+	const product = new Product(productData)
+
+	return product
 }
 
 export async function verifyNationalityIds(
@@ -74,6 +115,10 @@ async function gotoProfilePage(page: Page) {
 	await page.goto(PROFILE_URL)
 }
 
+async function gotoProductPage(page: Page) {
+	await page.goto(PRODUCT_URL)
+}
+
 async function gotoNationalityVerificationPage(page: Page) {
 	await page.goto(VERIFY_NATIONALITY_ID_URL)
 }
@@ -90,13 +135,20 @@ async function submitLoginForm(page: Page) {
 	await page.getByText('Masuk').click()
 }
 
-async function fetchProfile(page: Page): Promise<Profile> {
-	const response = await waitForProfileResponse(page)
+async function waitForProfileResponse(page: Page) {
+	return page.waitForResponse(
+		(response) =>
+			response.request().method() === 'GET' &&
+			response.url() === PROFILE_ENDPOINT
+	)
+}
 
-	const profileData = await parseResponseToProfileData(response)
-	const profile = new Profile(profileData)
-
-	return profile
+async function waitForProductResponse(page: Page) {
+	return page.waitForResponse(
+		(response) =>
+			response.request().method() === 'GET' &&
+			response.url() === PRODUCT_ENDPOINT
+	)
 }
 
 async function processNationalityIds(
@@ -161,14 +213,6 @@ async function submitVerifyNikForm(
 
 async function triggerNationalityIdVerification(page: Page) {
 	await page.getByTestId('btnCheckNik').click()
-}
-
-async function waitForProfileResponse(page: Page) {
-	return page.waitForResponse(
-		(response) =>
-			response.request().method() === 'GET' &&
-			response.url() === PROFILE_ENDPOINT
-	)
 }
 
 async function waitForNationalityIdResponse(page: Page, nationalityId: string) {

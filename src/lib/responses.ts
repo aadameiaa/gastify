@@ -1,4 +1,5 @@
 export type ProfileResponse = MyPertaminaResponse<ProfileData>
+export type ProductResponse = MyPertaminaResponse<ProductData>
 export type VerifyNationalityIdResponse =
 	MyPertaminaResponse<VerifyNationalityIdData>
 
@@ -47,6 +48,25 @@ type Bank = {
 	bankName: any
 	accountName: any
 	accountNumber: any
+}
+
+export interface ProductData {
+	registrationId: string
+	storeName: string
+	productId: string
+	productName: string
+	stockAvailable: number
+	stockRedeem: number
+	sold: number
+	modal: number
+	price: number
+	productMinPrice: number
+	productMaxPrice: number
+	image: string
+	stockDate: string
+	lastStock: number
+	lastStockDate: string
+	lastSyncAt: string
 }
 
 type VerifyNationalityIdData = {

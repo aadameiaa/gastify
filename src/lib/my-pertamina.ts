@@ -2,8 +2,16 @@ import { StatusCodes } from 'http-status-codes'
 import { Page } from 'playwright'
 
 import { Customer } from '../models/customer'
-import { LOGIN_URL, MY_PERTAMINA_DELAY, VERIFY_NIK_ENDPOINT } from './constants'
-import { parseResponseToCustomerData } from './dto'
+import { Profile } from '../models/profile'
+import {
+	LOGIN_URL,
+	MY_PERTAMINA_DELAY,
+	PROFILE_ENDPOINT,
+	PROFILE_URL,
+	VERIFY_NATIONALITY_ID_ENDPOINT,
+	VERIFY_NATIONALITY_ID_URL,
+} from './constants'
+import { parseResponseToCustomerData, parseResponseToProfileData } from './dto'
 import { readJSONFile, writeJSONFile } from './file'
 import {
 	convertCustomersToCustomerDataList,
@@ -11,6 +19,24 @@ import {
 	getUniqueNationalityIds,
 } from './helpers'
 import { delay } from './utils'
+
+export async function getProfile(
+	page: Page,
+	{ phoneNumber, pin }: { phoneNumber: string; pin: string }
+) {
+	await gotoLoginPage(page)
+	await fillLoginForm(page, { phoneNumber, pin })
+	await submitLoginForm(page)
+	await closeAnnouncementModal(page)
+	await gotoProfilePage(page)
+
+	const profile = await fetchProfile(page)
+
+	writeJSONFile(profile.data(), 'profile.json')
+
+	await gotoNationalityVerificationPage(page)
+	await logout(page)
+}
 
 export async function verifyNationalityIds(
 	page: Page,
@@ -28,23 +54,28 @@ export async function verifyNationalityIds(
 	const nationalityIds = readJSONFile(nationalityIdsPath) as string[]
 	const uniqueNationalityIds = getUniqueNationalityIds(nationalityIds)
 
-	const customers = await processNationalityIds(
-		page,
-		uniqueNationalityIds.slice(0, 20)
-	)
+	const customers = await processNationalityIds(page, uniqueNationalityIds)
 	const eligibleCustomers = getEligibleCustomers(customers)
-
-	await logout(page)
 
 	writeJSONFile(convertCustomersToCustomerDataList(customers), 'customers.json')
 	writeJSONFile(
 		convertCustomersToCustomerDataList(eligibleCustomers),
 		'eligible-customers.json'
 	)
+
+	await logout(page)
 }
 
 async function gotoLoginPage(page: Page) {
 	await page.goto(LOGIN_URL, { waitUntil: 'networkidle' })
+}
+
+async function gotoProfilePage(page: Page) {
+	await page.goto(PROFILE_URL)
+}
+
+async function gotoNationalityVerificationPage(page: Page) {
+	await page.goto(VERIFY_NATIONALITY_ID_URL)
 }
 
 async function fillLoginForm(
@@ -59,8 +90,13 @@ async function submitLoginForm(page: Page) {
 	await page.getByText('Masuk').click()
 }
 
-async function closeAnnouncementModal(page: Page) {
-	await page.locator('[data-testid^="btnClose"]').click()
+async function fetchProfile(page: Page): Promise<Profile> {
+	const response = await waitForProfileResponse(page)
+
+	const profileData = await parseResponseToProfileData(response)
+	const profile = new Profile(profileData)
+
+	return profile
 }
 
 async function processNationalityIds(
@@ -88,8 +124,8 @@ async function processSingleNationalityId(
 	page: Page,
 	nationalityId: string
 ): Promise<Customer | StatusCodes> {
-	await fillVerifyNikForm(page, nationalityId.toString())
-	return await submitVerifyNikForm(page, nationalityId.toString())
+	await fillVerifyNikForm(page, nationalityId)
+	return await submitVerifyNikForm(page, nationalityId)
 }
 
 async function fillVerifyNikForm(page: Page, nationalityId: string) {
@@ -127,11 +163,20 @@ async function triggerNationalityIdVerification(page: Page) {
 	await page.getByTestId('btnCheckNik').click()
 }
 
+async function waitForProfileResponse(page: Page) {
+	return page.waitForResponse(
+		(response) =>
+			response.request().method() === 'GET' &&
+			response.url() === PROFILE_ENDPOINT
+	)
+}
+
 async function waitForNationalityIdResponse(page: Page, nationalityId: string) {
 	return await page.waitForResponse(
 		(response) =>
 			response.request().method() === 'GET' &&
-			response.url() === `${VERIFY_NIK_ENDPOINT}?nationalityId=${nationalityId}`
+			response.url() ===
+				`${VERIFY_NATIONALITY_ID_ENDPOINT}?nationalityId=${nationalityId}`
 	)
 }
 
@@ -163,7 +208,12 @@ async function handleCustomerTypeModals(
 		return await closeChooseCustomerTypeModal(page)
 	}
 
-	return await page.getByTestId('btnChangeBuyer').click()
+	// return await page.getByTestId('btnChangeBuyer').click()
+	return await gotoNationalityVerificationPage(page)
+}
+
+async function closeAnnouncementModal(page: Page) {
+	await page.locator('[data-testid^="btnClose"]').click()
 }
 
 async function closeNIKRegistrationModal(page: Page) {

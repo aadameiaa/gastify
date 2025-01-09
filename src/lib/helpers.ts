@@ -1,5 +1,5 @@
 import { Customer } from '../models/customer'
-import { CustomerData } from './types'
+import type { CustomerRecord } from './types'
 
 export function getUniqueNationalityIds(nationalityIds: string[]): string[] {
 	return nationalityIds.filter(
@@ -11,8 +11,8 @@ export function getEligibleCustomers(customers: Customer[]): Customer[] {
 	return customers.filter((customer) => customer.isEligible())
 }
 
-export function convertCustomersToCustomerDataList(
+export function convertCustomersToCustomerRecords(
 	customers: Customer[]
-): CustomerData[] {
+): CustomerRecord[] {
 	return customers.map((customer) => customer.toJSON())
 }

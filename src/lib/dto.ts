@@ -1,22 +1,22 @@
 import { Response } from 'playwright'
 
-import {
+import type {
 	ProductResponse,
 	ProfileResponse,
 	ReportResponse,
 	VerifyNationalityIdResponse,
 } from './responses'
-import {
-	CustomerData,
+import type {
+	CustomerRecord,
 	CustomerType,
-	ProductData,
-	ProfileData,
-	ReportData,
+	ProductRecord,
+	ProfileRecord,
+	ReportRecord,
 } from './types'
 
-export async function parseResponseToProfileData(
+export async function parseResponseToProfileRecord(
 	response: Response
-): Promise<ProfileData> {
+): Promise<ProfileRecord> {
 	const { data } = (await response.json()) as ProfileResponse
 
 	return {
@@ -46,9 +46,9 @@ export async function parseResponseToProfileData(
 	}
 }
 
-export async function parseResponseToProductData(
+export async function parseResponseToProductRecord(
 	response: Response
-): Promise<ProductData> {
+): Promise<ProductRecord> {
 	const { data } = (await response.json()) as ProductResponse
 
 	return {
@@ -65,9 +65,9 @@ export async function parseResponseToProductData(
 	}
 }
 
-export async function parseResponseToReportData(
+export async function parseResponseToReportRecord(
 	response: Response
-): Promise<ReportData> {
+): Promise<ReportRecord> {
 	const { data } = (await response.json()) as ReportResponse
 	const summaryReport = data.summaryReport[0]
 
@@ -92,10 +92,10 @@ export async function parseResponseToReportData(
 	}
 }
 
-export async function parseResponseToCustomerData(
+export async function parseResponseToCustomerRecord(
 	response: Response,
 	nationalityId: string
-): Promise<CustomerData> {
+): Promise<CustomerRecord> {
 	const { data } = (await response.json()) as VerifyNationalityIdResponse
 
 	return {

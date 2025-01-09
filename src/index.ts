@@ -1,7 +1,8 @@
 import { config } from 'dotenv'
 
 import { launchBrowser } from './lib/playwright'
-import { Credentials } from './lib/types'
+import type { Credentials } from './lib/types'
+import { verifyNationalityId } from './my-pertamina/verify-nationality-id'
 
 config()
 
@@ -11,6 +12,8 @@ const main = async () => {
 	const credentials: Credentials = { phoneNumber, pin }
 
 	const { browser, context, page } = await launchBrowser()
+
+	await verifyNationalityId(page, credentials, '3276034501850002')
 
 	await context.close()
 	await browser.close()

@@ -1,4 +1,4 @@
-import { CustomerData, CustomerFlags, CustomerType } from '../lib/types'
+import type { CustomerFlags, CustomerRecord, CustomerType } from '../lib/types'
 
 export class Customer {
 	private readonly nationalityId: string
@@ -7,7 +7,7 @@ export class Customer {
 	private readonly types: CustomerType[]
 	private readonly flags: CustomerFlags
 
-	constructor({ nationalityId, name, quota, types, flags }: CustomerData) {
+	constructor({ nationalityId, name, quota, types, flags }: CustomerRecord) {
 		this.nationalityId = nationalityId
 		this.name = name
 		this.quota = quota
@@ -31,7 +31,15 @@ export class Customer {
 		return this.quota >= 1
 	}
 
-	toJSON(): Readonly<CustomerData> {
+	isOutOfQuota(): boolean {
+		return this.quota === 0
+	}
+
+	isBeyondReasonableLimits(orderQuantity: number): boolean {
+		return orderQuantity > this.quota
+	}
+
+	toJSON(): Readonly<CustomerRecord> {
 		return {
 			nationalityId: this.nationalityId,
 			name: this.name,

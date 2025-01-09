@@ -9,8 +9,8 @@ export function readJSONFile(filePath: string) {
 }
 
 export function writeJSONFile(data: any, filename: string) {
-	const parentDirPath = path.resolve(__dirname, '..')
-	const dirPath = path.resolve(parentDirPath, 'data')
+	const parentDirPath = path.resolve(__dirname, '../..')
+	const dirPath = path.resolve(parentDirPath, 'public/data')
 	const filePath = path.join(dirPath, filename)
 
 	if (!fs.existsSync(dirPath)) {

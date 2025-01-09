@@ -1,15 +1,15 @@
-import { ReportData, ReportSummary, Transaction } from '../lib/types'
+import type { ReportRecord, ReportSummary, Transaction } from '../lib/types'
 
 export class Report {
 	private readonly summary: ReportSummary
 	private readonly transactions: Transaction[]
 
-	constructor({ summary, transactions }: ReportData) {
+	constructor({ summary, transactions }: ReportRecord) {
 		this.summary = summary
 		this.transactions = transactions
 	}
 
-	toJSON(): Readonly<ReportData> {
+	toJSON(): Readonly<ReportRecord> {
 		return {
 			summary: this.summary,
 			transactions: this.transactions,

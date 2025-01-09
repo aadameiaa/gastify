@@ -1,4 +1,4 @@
-import { ProductData, ProductStock } from '../lib/types'
+import type { ProductRecord, ProductStock } from '../lib/types'
 
 export class Product {
 	private readonly id: string
@@ -7,7 +7,7 @@ export class Product {
 	private readonly price: number
 	private readonly stock: ProductStock
 
-	constructor({ id, name, modal, price, stock }: ProductData) {
+	constructor({ id, name, modal, price, stock }: ProductRecord) {
 		this.id = id
 		this.name = name
 		this.modal = modal
@@ -15,7 +15,7 @@ export class Product {
 		this.stock = stock
 	}
 
-	toJSON(): Readonly<ProductData> {
+	toJSON(): Readonly<ProductRecord> {
 		return {
 			id: this.id,
 			name: this.name,

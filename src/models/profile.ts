@@ -1,8 +1,8 @@
-import {
+import type {
 	ProfileAgent,
-	ProfileData,
 	ProfileFlags,
 	ProfileLocation,
+	ProfileRecord,
 } from '../lib/types'
 
 export class Profile {
@@ -24,7 +24,7 @@ export class Profile {
 		location,
 		agent,
 		flags,
-	}: ProfileData) {
+	}: ProfileRecord) {
 		this.registrationId = registrationId
 		this.nationalityId = nationalityId
 		this.name = name
@@ -35,7 +35,7 @@ export class Profile {
 		this.flags = flags
 	}
 
-	toJSON(): Readonly<ProfileData> {
+	toJSON(): Readonly<ProfileRecord> {
 		return {
 			registrationId: this.registrationId,
 			nationalityId: this.nationalityId,

@@ -152,4 +152,4 @@ dist
 /playwright/.cache/
 
 ### Internal data ###
-src/data
+public/data

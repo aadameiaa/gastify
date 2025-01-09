@@ -1,6 +1,6 @@
 import { CUSTOMER_TYPES } from './constants'
 
-export type ProfileData = {
+export type ProfileRecord = {
 	registrationId: string
 	nationalityId: string
 	name: string
@@ -32,7 +32,7 @@ export type ProfileFlags = {
 	isAvailableTransaction: boolean
 }
 
-export type ProductData = {
+export type ProductRecord = {
 	id: string
 	name: string
 	modal: number
@@ -47,7 +47,7 @@ export type ProductStock = {
 	date: string
 }
 
-export type ReportData = {
+export type ReportRecord = {
 	summary: ReportSummary
 	transactions: Transaction[]
 }
@@ -71,7 +71,7 @@ export type Transaction = {
 	}
 }
 
-export type CustomerData = {
+export type CustomerRecord = {
 	nationalityId: string
 	name: string
 	quota: number
@@ -98,4 +98,9 @@ export type Credentials = {
 export type Dates = {
 	started: string
 	ended: string
+}
+
+export type Order = {
+	nationalityId: string
+	quantity: number
 }
